@@ -1,0 +1,67 @@
+#   Licensed to the Apache Software Foundation (ASF) under one or more
+#   contributor license agreements.  See the NOTICE file distributed with
+#   this work for additional information regarding copyright ownership.
+#   The ASF licenses this file to You under the Apache License, Version 2.0
+#   (the "License"); you may not use this file except in compliance with
+#   the License.  You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+FROM java:8-jre
+
+
+# Config and data
+VOLUME /fuseki
+ENV FUSEKI_BASE /fuseki
+
+
+# Installation folder
+ENV FUSEKI_HOME /jena-fuseki
+
+ENV MAVEN_REPOSITORY https://repository.apache.org/content/groups/snapshots/
+ENV PACKAGE_PATH org/apache/jena/jena-fuseki-dist
+ENV FUSEKI_VERSION 2.0.0-SNAPSHOT
+
+
+ENV BUILD_DEPS curl unzip xqilla
+
+# Download the latest SNAPSHOT version from Maven repository
+# .. but without using Maven. So we'll XQuery the maven-metadata.xml
+# instead to find the latest version.
+
+WORKDIR /tmp
+RUN DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install -y $BUILD_DEPS && \
+    MAVEN_REPOSITORY_PATH=$MAVEN_REPOSITORY/$PACKAGE_PATH/$FUSEKI_VERSION && \
+    curl -fO $MAVEN_REPOSITORY_PATH/maven-metadata.xml && \
+    echo '/metadata/versioning/snapshotVersions/snapshotVersion[1]/value/text()' > xquery && \
+    SNAPSHOT_VERSION=$(xqilla -i maven-metadata.xml xquery) && \
+    ZIP=jena-fuseki-dist-${SNAPSHOT_VERSION}.zip && \
+    URL=$MAVEN_REPOSITORY_PATH/$ZIP && \
+    echo Downloading $URL && \
+    curl -f -O $URL && \
+    curl -f -O $URL.sha1 && \
+    echo " " $ZIP >> $ZIP.sha1 && \
+    cat $ZIP.sha1 && \
+    sha1sum -c $ZIP.sha1 && \
+    unzip $ZIP && \
+    rm jena-fuseki-*/*war && \
+    mv jena-fuseki-*/ $FUSEKI_HOME && \
+    apt-get remove -y --purge $BUILD_DEPS && \
+    apt-get autoremove -y && \
+    apt-get autoclean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/*
+
+
+# Where we start our server from
+WORKDIR /jena-fuseki
+EXPOSE 3030
+CMD ["./fuseki-server"]
