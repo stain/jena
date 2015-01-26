@@ -44,7 +44,8 @@ RUN chmod 755 /jena-fuseki/docker-entrypoint.sh
 # instead to find the latest version.
 
 WORKDIR /tmp
-RUN DEBIAN_FRONTEND=noninteractive && \
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    rm -rf /var/lib/apt/lists/* && \
     apt-get update && \
     apt-get install -y $BUILD_DEPS && \
     MAVEN_REPOSITORY_PATH=$MAVEN_REPOSITORY/$PACKAGE_PATH/$FUSEKI_VERSION && \
