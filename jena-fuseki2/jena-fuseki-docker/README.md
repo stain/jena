@@ -46,17 +46,33 @@ first as:
     docker run --name fuseki-data -v /fuseki busybox
 
 Then start fuseki using `--volumes-from`. This allows you to later upgrade the
-jena-fuseki docker image without losing the data.
+jena-fuseki docker image without losing the data. The below also uses
+`-d` to start the container in the background.
 
-    docker run --name fuseki -p 3030:3030 --volumes-from fuseki-data stain/jena-fuseki
+    docker run -d --name fuseki -p 3030:3030 --volumes-from fuseki-data stain/jena-fuseki
 
 If you want to store fuseki data in a specified location on the host (e.g. for
 disk space or speed requirements), specify it using `-v`:
 
-    docker run -p 3030:3030 -v /ssd/data/fuseki:/fuseki
+    docker run -d --name fuseki -p 3030:3030 -v /ssd/data/fuseki:/fuseki -it stain/jena-fuseki
 
 Note that the `/fuseki` volume must only be accessed from a single Fuseki 
 container at a time.    
+
+To check the logs for the container you gave `--name fuseki`, use:
+
+    docker logs fuseki
+
+To stop the named container, use:    
+
+    docker stop fuseki
+
+.. or press Ctrl-C if you started the container with `-it`.    
+
+To restart the named container (it will remember the volume and port config)
+
+    docker restart fuseki
+
 
 ## Data loading
 
