@@ -29,14 +29,15 @@ ENV PACKAGE_PATH org/apache/jena/jena-fuseki-dist
 ENV FUSEKI_VERSION 2.0.0-SNAPSHOT
 
 
-ENV BUILD_DEPS curl xqilla pwgen
+ENV BUILD_DEPS curl xqilla
+ENV DEPS pwgen
 
 # As "localhost" is often inaccessible within Docker container,
 # we'll enable basic-auth with a random admin password 
 # (which we'll generate on start-up)
 COPY shiro.ini /jena-fuseki/shiro.ini
-COPY docker-entrypoint.sh /jena-fuseki/
-RUN chmod 755 /jena-fuseki/docker-entrypoint.sh
+COPY docker-entrypoint.sh /
+RUN chmod 755 /docker-entrypoint.sh
 
 # Evil hack below..
 # Download the latest Fuseki2 SNAPSHOT version from Maven repository
@@ -47,7 +48,7 @@ WORKDIR /tmp
 RUN export DEBIAN_FRONTEND=noninteractive && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get update && \
-    apt-get install -y $BUILD_DEPS && \
+    apt-get install -y $BUILD_DEPS $DEPS && \
     MAVEN_REPOSITORY_PATH=$MAVEN_REPOSITORY/$PACKAGE_PATH/$FUSEKI_VERSION && \
     curl -fO $MAVEN_REPOSITORY_PATH/maven-metadata.xml && \
     echo '/metadata/versioning/snapshotVersions/snapshotVersion[1]/value/text()' > xquery && \
@@ -62,7 +63,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     sha1sum -c $FILE.sha1 && \
     tar xzf $FILE && \
     rm jena-fuseki-*/*war && \
-    mv jena-fuseki-*/ $FUSEKI_HOME && \
+    mv jena-fuseki-*/* $FUSEKI_HOME && \
     apt-get remove -y --purge $BUILD_DEPS && \
     apt-get autoremove -y && \
     apt-get autoclean && \
@@ -73,5 +74,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 # Where we start our server from
 WORKDIR /jena-fuseki
 EXPOSE 3030
-ENTRYPOINT ["/jena-fuseki/docker-entrypoint.sh]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["/jena-fuseki/fuseki-server"]
+
