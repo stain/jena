@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-FROM java:8-jre
+FROM java:7-jdk
 
 
 # Config and data
@@ -29,9 +29,17 @@ ENV PACKAGE_PATH org/apache/jena/jena-fuseki-dist
 ENV FUSEKI_VERSION 2.0.0-SNAPSHOT
 
 
-ENV BUILD_DEPS curl unzip xqilla
+ENV BUILD_DEPS curl xqilla pwgen
 
-# Download the latest SNAPSHOT version from Maven repository
+# As "localhost" is often inaccessible within Docker container,
+# we'll enable basic-auth with a random admin password 
+# (which we'll generate on start-up)
+COPY shiro.ini /jena-fuseki/shiro.ini
+COPY docker-entrypoint.sh /jena-fuseki/
+RUN chmod 755 /jena-fuseki/docker-entrypoint.sh
+
+# Evil hack below..
+# Download the latest Fuseki2 SNAPSHOT version from Maven repository
 # .. but without using Maven. So we'll XQuery the maven-metadata.xml
 # instead to find the latest version.
 
@@ -43,15 +51,15 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     curl -fO $MAVEN_REPOSITORY_PATH/maven-metadata.xml && \
     echo '/metadata/versioning/snapshotVersions/snapshotVersion[1]/value/text()' > xquery && \
     SNAPSHOT_VERSION=$(xqilla -i maven-metadata.xml xquery) && \
-    ZIP=jena-fuseki-dist-${SNAPSHOT_VERSION}.zip && \
-    URL=$MAVEN_REPOSITORY_PATH/$ZIP && \
+    FILE=jena-fuseki-dist-${SNAPSHOT_VERSION}.tar.gz && \
+    URL=$MAVEN_REPOSITORY_PATH/$FILE && \
     echo Downloading $URL && \
     curl -f -O $URL && \
     curl -f -O $URL.sha1 && \
-    echo " " $ZIP >> $ZIP.sha1 && \
-    cat $ZIP.sha1 && \
-    sha1sum -c $ZIP.sha1 && \
-    unzip $ZIP && \
+    echo " " $FILE >> $FILE.sha1 && \
+    cat $FILE.sha1 && \
+    sha1sum -c $FILE.sha1 && \
+    tar xzf $FILE && \
     rm jena-fuseki-*/*war && \
     mv jena-fuseki-*/ $FUSEKI_HOME && \
     apt-get remove -y --purge $BUILD_DEPS && \
@@ -64,4 +72,5 @@ RUN DEBIAN_FRONTEND=noninteractive && \
 # Where we start our server from
 WORKDIR /jena-fuseki
 EXPOSE 3030
-CMD ["./fuseki-server"]
+ENTRYPOINT ["/jena-fuseki/docker-entrypoint.sh]
+CMD ["/jena-fuseki/fuseki-server"]
