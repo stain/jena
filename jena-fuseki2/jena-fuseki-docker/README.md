@@ -76,6 +76,64 @@ To restart the named container (it will remember the volume and port config)
 
 ## Data loading
 
-TODO: Use tdbloader ?  Do we need jena-arq/bin/ in the image?
+Fuseki allows uploading through the web interface and web services, but for large
+datasets it is more efficient to load them directly using the command line tool.
+
+This docker image includes a shell script `load.sh` that invokes the
+[tdbloader](https://jena.apache.org/documentation/tdb/commands.html)
+command line tool and load datasets from the docker volume `/staging`.
+
+**WARNING**: Before data loading, you must either stop the Fuseki container, or
+load the data into a non-existing dataset.
+
+For help, try:
+
+    docker run stain/jena-fuseki ./load.sh
+
+You will most likely want to load from a folder on the host computer by using `-v`, and into a data volume that you can then use with the regular fuseki.
+
+
+The example below assume you want to populate the Fuseki dataset 'chembl19' from the Docker data volume `fuseki-data` (see above) by loading the two files `cco.ttl.gz` and `void.ttl.gz` from `/home/stain/ops/chembl19` on the host computer:
+
+    docker run --volumes-from fuseki-data -v /home/stain/ops/chembl19:/staging stain/jena-fuseki ./load.sh chembl19 cco.ttl.gz void.ttl.gz
+
+**Tip:** You might find it benefitial to run data loading from the data staging
+directory in order to use tab-completion etc. without exposing the path on the
+host.
+
+If you don't specify any filenames to `load.sh`, all filenames directly under `/staging` that
+match these GLOB patterns will be loaded:
+
+    *.rdf *.rdf.gz *.ttl *.ttl.gz *.owl *.owl.gz *.nt *.nt.gz *.nquads *.nquads.gz
+
+`load.sh` populates directly into the default graph. To populate into named graphs, see the `tdbloader` section below.
+
+**NOTE:**: If you load data into a brand new data volume, a new random admin
+password will be generated. You can either check the output of the data
+loading, or later override the password using `-e ADMIN_PASSWORD=pw123`.
+
+## Loading with tdbloader
+
+If you have more advanced requirements, like loading multiple datasets or named graphs, you can 
+use [tdbloader](https://jena.apache.org/documentation/tdb/commands.html) directly together with 
+a [TDB assembler file](https://jena.apache.org/documentation/tdb/assembler.html).
+
+Note that Fuseki TDB datasets are sub-folders in `/fuseki/databases/`.
+
+You will need to provide the assembler file on a mounted Docker volume together with the
+data:
+
+    docker run --volumes-from fuseki-data -v /home/stain/data:/staging stain/jena-fuseki ./tdbloader --desc=/staging/tdb.ttl
+
+## Recognizing the dataset in Fuseki
+
+If you loaded into an existing dataset, Fuseki should find the data after
+(re)starting with the same data volume (see above):
+
+    docker restart fuseki
+
+If you created a brand new dataset, then in Fuseki go to *Manage datasets*, click *Add new dataset*, tick **Persistent** and provide the database name exactly as provided to `load.sh`, e.g. `chembl19`. 
+
+It should be possible to load a new dataset in a running Fuseki server, as long as you don't register it until the data-loading has finished.
 
 
