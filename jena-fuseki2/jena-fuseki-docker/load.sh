@@ -55,4 +55,4 @@ echo ""
 echo $files
 echo "#########"
 
-exec java -cp $FUSEKI_HOME/fuseki-server.jar tdb.tdbloader --loc=$FUSEKI_BASE/$DB $files
+exec ./tdbloader --loc=$FUSEKI_BASE/$DB $files

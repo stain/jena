@@ -71,6 +71,10 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     rm -rf /tmp/*
 
 COPY load.sh /jena-fuseki/
+COPY tdbloader /jena-fuseki/
+RUN chmod 755 /jena-fuseki/load.sh /jena-fuseki/tdbloader
+#VOLUME /staging
+
 
 # Where we start our server from
 WORKDIR /jena-fuseki
