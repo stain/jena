@@ -96,8 +96,6 @@ This docker image includes a shell script `load.sh` that invokes the
 [tdbloader](https://jena.apache.org/documentation/tdb/commands.html)
 command line tool and load datasets from the docker volume `/staging`.
 
-**WARNING**: Before data loading, you must either stop the Fuseki container, or
-load the data into a brand new dataset that Fuseki doesn't know about yet.
 
 For help, try:
 
@@ -106,6 +104,11 @@ For help, try:
 You will most likely want to load from a folder on the host computer by using
 `-v`, and into a data volume that you can then use with the regular fuseki.
 
+Before data loading, you must either stop the Fuseki container, or
+load the data into a brand new dataset that Fuseki doesn't know about yet. 
+To stop the docker container you named `fuseki`:
+
+    docker stop fuseki
 
 The example below assume you want to populate the Fuseki dataset 'chembl19'
 from the Docker data volume `fuseki-data` (see above) by loading the two files
