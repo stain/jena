@@ -175,5 +175,7 @@ If you need to modify Fuseki's configuration further, you can use the equivalent
 
     docker run --volumes-from fuseki-data -it ubuntu bash
 
-and inspect `/fuseki`
+and inspect `/fuseki` with the shell. Remember to restart fuseki afterwards:
+
+    docker restart fuseki
 
