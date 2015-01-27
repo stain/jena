@@ -171,6 +171,9 @@ data:
     docker run --volumes-from fuseki-data -v /home/stain/data:/staging stain/jena-fuseki \
       ./tdbloader --desc=/staging/tdb.ttl
 
+Remember to use the Docker container's data volume paths within the assembler
+file, e.g. `/staging/dataset.ttl` instead of `/home/stain/data/dataset.ttl`.
+
 
 ## Customizing Fuseki configuration
 
