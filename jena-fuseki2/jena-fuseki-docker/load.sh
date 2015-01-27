@@ -6,7 +6,7 @@ for e in $extensions ; do
   PATTERNS="$PATTERNS *.$e *.$e.gz"
 done
 
-if [ $# -eq 0 ] || [ "$1" == "-h" ] || [ "$1" == "--help" ] ; then 
+if [ $# -eq 0 ] ; then 
   echo "$0 [DB] [PATTERN ...]" 
   echo "Load one or more RDF files into Jena Fuseki TDB database DB."
   echo ""
