@@ -70,6 +70,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /tmp/*
 
+COPY load.sh /jena-fuseki/
 
 # Where we start our server from
 WORKDIR /jena-fuseki
