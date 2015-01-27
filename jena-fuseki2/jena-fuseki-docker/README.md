@@ -112,6 +112,18 @@ match these GLOB patterns will be loaded:
 password will be generated. You can either check the output of the data
 loading, or later override the password using `-e ADMIN_PASSWORD=pw123`.
 
+## Recognizing the dataset in Fuseki
+
+If you loaded into an existing dataset, Fuseki should find the data after
+(re)starting with the same data volume (see above):
+
+    docker restart fuseki
+
+If you created a brand new dataset, then in Fuseki go to *Manage datasets*, click *Add new dataset*, tick **Persistent** and provide the database name exactly as provided to `load.sh`, e.g. `chembl19`. 
+
+It should be possible to load a new dataset in a running Fuseki server, as long as you don't register it until the data-loading has finished.
+
+
 ## Loading with tdbloader
 
 If you have more advanced requirements, like loading multiple datasets or named graphs, you can 
@@ -124,16 +136,5 @@ You will need to provide the assembler file on a mounted Docker volume together 
 data:
 
     docker run --volumes-from fuseki-data -v /home/stain/data:/staging stain/jena-fuseki ./tdbloader --desc=/staging/tdb.ttl
-
-## Recognizing the dataset in Fuseki
-
-If you loaded into an existing dataset, Fuseki should find the data after
-(re)starting with the same data volume (see above):
-
-    docker restart fuseki
-
-If you created a brand new dataset, then in Fuseki go to *Manage datasets*, click *Add new dataset*, tick **Persistent** and provide the database name exactly as provided to `load.sh`, e.g. `chembl19`. 
-
-It should be possible to load a new dataset in a running Fuseki server, as long as you don't register it until the data-loading has finished.
 
 
