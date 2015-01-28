@@ -21,7 +21,10 @@ To try out this image, try:
 
 The Apache Jena Fuseki should then be available at http://localhost:3030/
 
-To expose Fuseki on a different port, use the equivalent of `-p 80:3030`. 
+To expose Fuseki on a different port, modify `-p` and run `./fuseki-server --port=PORT` (see [JENA-868](https://issues.apache.org/jira/browse/JENA-868)):
+
+    docker run -p 8080:8080 -it stain/jena-fuseki ./fuseki-server --port=8080
+
 
 To load RDF graphs, you will need to log in as the `admin` user. To see the 
 automatically generated admin password, see the output from above, or
