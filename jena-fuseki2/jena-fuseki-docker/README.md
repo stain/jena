@@ -35,6 +35,11 @@ You can override the admin-password using the form
 
     docker run -p 3030:3030 -e ADMIN_PASSWORD=pw123 -it stain/jena-fuseki
 
+To specify Java settings such as the amount of memory to allocate for the
+heap (default: 1200 MiB), set the `JVM_ARGS` environment with `-e`:
+
+    docker run -p 3030:3030 -e JVM_ARGS=-Xmx2g -it stain/jena-fuseki
+
 
 ## Data persistence
 
