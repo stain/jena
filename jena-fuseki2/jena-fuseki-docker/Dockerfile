@@ -25,7 +25,7 @@ ENV FUSEKI_BASE /fuseki
 ENV FUSEKI_HOME /jena-fuseki
 
 ENV MAVEN_REPOSITORY https://repository.apache.org/content/groups/snapshots/
-ENV PACKAGE_PATH org/apache/jena/jena-fuseki-dist
+ENV PACKAGE_PATH org/apache/jena/apache-jena-fuseki
 ENV FUSEKI_VERSION 2.0.0-SNAPSHOT
 
 
@@ -53,7 +53,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     curl -fO $MAVEN_REPOSITORY_PATH/maven-metadata.xml && \
     echo '/metadata/versioning/snapshotVersions/snapshotVersion[1]/value/text()' > xquery && \
     SNAPSHOT_VERSION=$(xqilla -i maven-metadata.xml xquery) && \
-    FILE=jena-fuseki-dist-${SNAPSHOT_VERSION}.tar.gz && \
+    FILE=apache-jena-fuseki-${SNAPSHOT_VERSION}.tar.gz && \
     URL=$MAVEN_REPOSITORY_PATH/$FILE && \
     echo Downloading $URL && \
     curl -f -O $URL && \
@@ -62,8 +62,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     cat $FILE.sha1 && \
     sha1sum -c $FILE.sha1 && \
     tar xzf $FILE && \
-    rm jena-fuseki-*/*war && \
-    mv jena-fuseki-*/* $FUSEKI_HOME && \
+    rm apache-jena-fuseki-*/*war && \
+    mv apache-jena-fuseki-*/* $FUSEKI_HOME && \
     apt-get remove -y --purge $BUILD_DEPS && \
     apt-get autoremove -y && \
     apt-get autoclean && \
