@@ -24,12 +24,12 @@ ENV FUSEKI_BASE /fuseki
 # Installation folder
 ENV FUSEKI_HOME /jena-fuseki
 
-ENV MAVEN_REPOSITORY https://repository.apache.org/content/groups/snapshots/
+ENV MAVEN_REPOSITORY https://repo.maven.apache.org/maven2/
 ENV PACKAGE_PATH org/apache/jena/apache-jena-fuseki
-ENV FUSEKI_VERSION 2.0.0-SNAPSHOT
+ENV FUSEKI_VERSION 2.0.0
 
 
-ENV BUILD_DEPS curl xqilla
+ENV BUILD_DEPS curl
 ENV DEPS pwgen
 
 # As "localhost" is often inaccessible within Docker container,
@@ -39,10 +39,6 @@ COPY shiro.ini /jena-fuseki/shiro.ini
 COPY docker-entrypoint.sh /
 RUN chmod 755 /docker-entrypoint.sh
 
-# Evil hack below..
-# Download the latest Fuseki2 SNAPSHOT version from Maven repository
-# .. but without using Maven. So we'll XQuery the maven-metadata.xml
-# instead to find the latest version.
 
 WORKDIR /tmp
 RUN export DEBIAN_FRONTEND=noninteractive && \
@@ -50,10 +46,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && \
     apt-get install -y $BUILD_DEPS $DEPS && \
     MAVEN_REPOSITORY_PATH=$MAVEN_REPOSITORY/$PACKAGE_PATH/$FUSEKI_VERSION && \
-    curl -fO $MAVEN_REPOSITORY_PATH/maven-metadata.xml && \
-    echo '/metadata/versioning/snapshotVersions/snapshotVersion[1]/value/text()' > xquery && \
-    SNAPSHOT_VERSION=$(xqilla -i maven-metadata.xml xquery) && \
-    FILE=apache-jena-fuseki-${SNAPSHOT_VERSION}.tar.gz && \
+    FILE=apache-jena-fuseki-${FUSEKI_VERSION}.tar.gz && \
     URL=$MAVEN_REPOSITORY_PATH/$FILE && \
     echo Downloading $URL && \
     curl -f -O $URL && \
