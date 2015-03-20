@@ -67,11 +67,6 @@
         <artifactId>hadoop-mapreduce-client-common</artifactId>
         <version>${hadoop.version}</version>
       </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>11.0.2</version>
-      </dependency>
 
       <!-- Jena Dependencies -->
       <dependency>
@@ -86,6 +81,13 @@
         <artifactId>airline</artifactId>
         <version>${airline.version}</version>
       </dependency>
+      <dependency>
+      <!--  Need at least 18.0 for com.github.rvesse:airline -->
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>[18.0,)</version>
+      </dependency>
+
 
       <!-- Test Dependencies -->
       <dependency>
