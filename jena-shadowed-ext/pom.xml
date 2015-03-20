@@ -34,7 +34,7 @@
     which we don't want to be depending on in their regular
     package names, as they are likely to change/upgrade
     externally and also be used in other libraries 
-    in potentialyl conflicting versions.
+    in potentially conflicting versions.
 
     This module uses the Shade plugin to re-package them
     under the package name
