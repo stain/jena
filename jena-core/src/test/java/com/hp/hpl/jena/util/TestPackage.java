@@ -35,7 +35,6 @@ public class TestPackage extends TestSuite {
     /** Creates new TestPackage */
     private TestPackage() {
         super( "util" );
-        addTest( "TestBoundedLRUMap",        TestBoundedLRUMap.suite() );
         addTest( TestCache.suite() );
         addTest( "TestTokenzier",         TestTokenizer.suite());
         addTest( "TestFileUtils",         TestFileUtils.suite() );

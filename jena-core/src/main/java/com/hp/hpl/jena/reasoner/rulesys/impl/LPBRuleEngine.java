@@ -24,8 +24,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
+import org.apache.jena.ext.com.google.common.cache.Cache;
+import org.apache.jena.ext.com.google.common.cache.CacheBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +38,6 @@ import com.hp.hpl.jena.reasoner.ReasonerException;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.BackwardRuleInfGraphI;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
-import com.hp.hpl.jena.util.BoundedLRUMap;
-import com.hp.hpl.jena.util.cache.CacheControl;
-import com.hp.hpl.jena.util.cache.CacheManager;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.util.iterator.WrappedIterator;
 
@@ -74,7 +74,8 @@ public class LPBRuleEngine {
     /** Table mapping tabled goals to generators for those goals.
      *  This is here so that partial goal state can be shared across multiple queries.
      */
-    protected Map<TriplePattern, Generator> tabledGoals = new BoundedLRUMap<>(MAX_CACHED_TABLED_GOALS);
+    protected Cache<TriplePattern, Generator> tabledGoals = CacheBuilder.newBuilder()
+    	       .maximumSize(MAX_CACHED_TABLED_GOALS).weakValues().build();
     //protected Map<TriplePattern, Generator> tabledGoals = new HashMap<>();
     
     /** Set of generators waiting to be run */
@@ -132,7 +133,7 @@ public class LPBRuleEngine {
      */
     public synchronized void reset() {
         checkSafeToUpdate();
-        tabledGoals.clear();
+        tabledGoals.invalidateAll();
         agenda.clear();
     }
     
@@ -274,16 +275,24 @@ public class LPBRuleEngine {
      * @param goal the goal whose results are to be generated
      * @param clauses the precomputed set of code blocks used to implement the goal
      */
-    public synchronized Generator generatorFor(TriplePattern goal, List<RuleClauseCode> clauses) {
-        Generator generator = tabledGoals.get(goal);
-        if (generator == null) {
-            LPInterpreter interpreter = new LPInterpreter(this, goal, clauses, false);
-            activeInterpreters.add(interpreter);
-            generator = new Generator(interpreter, goal);
-            schedule(generator);
-            tabledGoals.put(goal, generator);
-        }
-        return generator;
+    public synchronized Generator generatorFor(final TriplePattern goal, final List<RuleClauseCode> clauses) {
+        try {
+			return tabledGoals.get(goal, new Callable<Generator>() {
+			 	@Override
+			    public Generator call() {
+			        LPInterpreter interpreter = new LPInterpreter(LPBRuleEngine.this, goal, clauses, false);
+			        activeInterpreters.add(interpreter);
+			        Generator generator = new Generator(interpreter, goal);
+			        schedule(generator);
+			        return generator;
+			 	}
+			});
+		} catch (ExecutionException e) {
+			if (e.getCause() instanceof RuntimeException) {
+				throw (RuntimeException)e.getCause();
+			}
+			throw new RuntimeException(e);
+		}
     }
         
     /**
@@ -291,19 +300,27 @@ public class LPBRuleEngine {
      * the goal should be tabled).
      * @param goal the goal whose results are to be generated
      */
-    public synchronized Generator generatorFor(TriplePattern goal) {
-        Generator generator = tabledGoals.get(goal);
-        if (generator == null) {
-            LPInterpreter interpreter = new LPInterpreter(this, goal, false);
-            activeInterpreters.add(interpreter);
-            generator = new Generator(interpreter, goal);
-            schedule(generator);
-            tabledGoals.put(goal, generator);
-        }
-        return generator;
+    public synchronized Generator generatorFor(final TriplePattern goal) {
+        try {
+			return tabledGoals.get(goal, new Callable<Generator>() {
+			 	@Override
+			    public Generator call() {
+		            LPInterpreter interpreter = new LPInterpreter(LPBRuleEngine.this, goal, false);
+		            activeInterpreters.add(interpreter);
+		            Generator generator = new Generator(interpreter, goal);
+		            schedule(generator);
+		            return generator;
+			 	}
+			});
+		} catch (ExecutionException e) {
+			if (e.getCause() instanceof RuntimeException) {
+				throw (RuntimeException)e.getCause();
+			}
+			throw new RuntimeException(e);
+		}
     }
     
-    int cachedTabledGoals() {
+    long cachedTabledGoals() {
     	return tabledGoals.size();
     }
     
