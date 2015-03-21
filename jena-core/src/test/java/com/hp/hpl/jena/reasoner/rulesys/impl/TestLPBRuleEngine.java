@@ -45,6 +45,8 @@ public class TestLPBRuleEngine extends TestCase {
 	}
 
 	protected Node a = NodeFactory.createURI("a");
+	protected Node b = NodeFactory.createURI("b");
+	protected Node nohit = NodeFactory.createURI("nohit");
 	protected Node p = NodeFactory.createURI("p");
 	protected Node C1 = NodeFactory.createURI("C1");
 	protected Node C2 = NodeFactory.createURI("C2");
@@ -58,6 +60,51 @@ public class TestLPBRuleEngine extends TestCase {
 		return reasoner;
 	}
 
+	@Test
+	public void testNotLeakingActiveInterpreters() throws Exception {
+		Graph data = Factory.createGraphMem();
+		data.add(new Triple(a, ty, C1));
+		data.add(new Triple(b, ty, C1));
+		List<Rule> rules = Rule
+				.parseRules("[r1:  (?x p ?t) <- (?x rdf:type C1), makeInstance(?x, p, C2, ?t)]"
+						+ "[r2:  (?t rdf:type C2) <- (?x rdf:type C1), makeInstance(?x, p, C2, ?t)]");
+
+		FBRuleInfGraph infgraph = (FBRuleInfGraph) createReasoner(rules).bind(
+				data);
+
+		LPBRuleEngine engine = getEngineForGraph(infgraph);
+		assertEquals(0, engine.activeInterpreters.size());
+		assertEquals(0, engine.tabledGoals.size());
+
+		// we ask for a non-hit -- it works, but only because we call it.hasNext()
+		ExtendedIterator<Triple> it = infgraph.find(nohit, ty, C1);
+		assertFalse(it.hasNext());
+		it.close();
+		assertEquals(0, engine.activeInterpreters.size());
+
+		// and again.
+		// Ensure this is not cached by asking for a different triple pattern
+		ExtendedIterator<Triple> it2 = infgraph.find(nohit, ty, C2);
+		// uuups, forgot to call it.hasNext(). But .close() should tidy
+		it2.close();
+		assertEquals(0, engine.activeInterpreters.size());
+
+		
+		// OK, let's ask for something that is in the graph
+		
+		ExtendedIterator<Triple> it3 = infgraph.find(a, ty, C1);
+		assertTrue(it3.hasNext());
+		assertEquals(a, it3.next().getMatchSubject());
+		
+		// .. and what if we forget to call next() to consume b?
+		// (e.g. return from a method with the first hit)
+		
+		// this should be enough
+		it3.close();
+		// without leaks of activeInterpreters
+		assertEquals(0, engine.activeInterpreters.size());
+	}
+	
 	@Test
 	public void testTabledGoalsCacheHits() throws Exception {
 		Graph data = Factory.createGraphMem();
