@@ -389,7 +389,7 @@ public class LPBRuleEngine {
     }
     
     /**
-     * Check all known interpeter contexts to see if any are complete.
+     * Check all known interpreter contexts to see if any are complete.
      */
     public void checkForCompletions() {
         List<Generator> contexts = null;
