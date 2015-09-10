@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-FROM java:7-jdk
+FROM java:8-jdk
 
 
 # Config and data
@@ -26,7 +26,7 @@ ENV FUSEKI_HOME /jena-fuseki
 
 ENV MAVEN_REPOSITORY https://repo.maven.apache.org/maven2/
 ENV PACKAGE_PATH org/apache/jena/apache-jena-fuseki
-ENV FUSEKI_VERSION 2.0.0
+ENV FUSEKI_VERSION 2.3.0
 
 
 ENV BUILD_DEPS curl
